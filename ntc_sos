@@ -1,7 +1,4 @@
 // bluetooth sıcaklık ölçer
-// by Abdulmuttalip DURAN
-// BİLİM TEKNO
-// abone olmayı unutmayınız
 
 #define ntc A0
 #define ledPin 13
