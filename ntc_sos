@@ -1,0 +1,75 @@
+// bluetooth sıcaklık ölçer
+// by Abdulmuttalip DURAN
+// BİLİM TEKNO
+// abone olmayı unutmayınız
+
+#define ntc A0
+#define ledPin 13
+#define buzzerPin 9
+#define sosPin 12
+
+int ntcveri;
+float sicaklik;
+String text;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ntc, INPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(sosPin, OUTPUT); // SOS pini için ayar
+  digitalWrite(sosPin, LOW); // SOS LED başta kapalı
+}
+
+double ntchesap(int ntcinput) {
+  double sicaklik;
+  sicaklik = log(((10240000 / ntcinput) - 10000));
+  sicaklik = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * sicaklik * sicaklik)) * sicaklik);
+  sicaklik = sicaklik - 273.15;
+  return sicaklik;
+}
+
+void SOS_Alarm() {
+  digitalWrite(sosPin, HIGH); // SOS pini aktif
+  digitalWrite(ledPin, LOW);  // ledPin kapalı
+
+  // SOS sinyali için kısa-kısa-uzun kalıbı
+  for (int i = 0; i < 3; i++) { // Kısa sinyaller
+    tone(buzzerPin, 400);       // 400 Hz frekansında ses
+    delay(200);                 // 200ms açık
+    noTone(buzzerPin);          // Sesi kapat
+    delay(200);                 // 200ms kapalı
+  }
+  for (int i = 0; i < 3; i++) { // Uzun sinyaller
+    tone(buzzerPin, 400);
+    delay(500);                 // 500ms açık
+    noTone(buzzerPin);
+    delay(200);                 // 200ms kapalı
+  }
+  for (int i = 0; i < 3; i++) { // Kısa sinyaller
+    tone(buzzerPin, 400);
+    delay(200);                 // 200ms açık
+    noTone(buzzerPin);
+    delay(200);                 // 200ms kapalı
+  }
+  delay(1000); // SOS sinyalleri arasında 1 saniye bekleme
+
+  digitalWrite(sosPin, LOW); // SOS pini kapalı
+}
+
+void loop() {
+  ntcveri = analogRead(ntc);
+  sicaklik = ntchesap(ntcveri);
+  text = "*y" + String(sicaklik) + "*" + "\n";
+  Serial.print(text);
+
+  if (sicaklik > 30) {
+    SOS_Alarm(); // SOS alarmını çalıştır
+  } else {
+    digitalWrite(ledPin, HIGH); // ledPin yanar
+    digitalWrite(sosPin, LOW);  // SOS pini kapalı
+    noTone(buzzerPin);          // Buzzer sessiz
+  }
+
+  delay(500); // 500ms bekleme
+}
